@@ -1,0 +1,150 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <string.h>
+#include <time.h>
+
+void print_files(const char *directory) {
+    DIR *dir = opendir(directory);
+    if (dir == NULL) {
+        perror("opendir");
+        return;
+    }
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        printf("%s\n", entry->d_name);
+    }
+
+    closedir(dir);
+}
+
+void print_hidden(const char *directory) {
+    DIR *dir = opendir(directory);
+    if (dir == NULL) {
+        perror("opendir");
+        return;
+    }
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_name[0] == '.') {
+            printf("%s\n", entry->d_name);
+        }
+    }
+
+    closedir(dir);
+}
+
+void print_size_time(const char *directory) {
+    DIR *dir = opendir(directory);
+    if (dir == NULL) {
+        perror("opendir");
+        return;
+    }
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        char path[1024];
+        snprintf(path, sizeof(path), "%s/%s", directory, entry->d_name);
+
+        struct stat st;
+        if (stat(path, &st) == 0 && S_ISREG(st.st_mode)) {
+            printf("File: %s, Size: %ld bytes, Last modified time: %s", entry->d_name, st.st_size, ctime(&st.st_mtime));
+        }
+    }
+
+    closedir(dir);
+}
+
+void print_all_directories() {
+    DIR *dir = opendir(".");
+    if (dir == NULL) {
+        perror("opendir");
+        return;
+    }
+
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_type == DT_DIR) {
+            printf("%s\n", entry->d_name);
+        }
+    }
+
+    closedir(dir);
+}
+
+void ls_command(const char *directory) {
+    if (directory == NULL) {
+        system("ls");
+    } else {
+        char command[1024];
+        snprintf(command, sizeof(command), "ls %s", directory);
+        system(command);
+    }
+}
+
+void change_directory(const char *directory) {
+    if (chdir(directory) != 0) {
+        perror("chdir");
+    }
+}
+
+int main(int argc, char *argv[]) {
+    int opt;
+    char *directory = NULL;
+    int directory_given = 0;
+
+    while ((opt = getopt(argc, argv, "phsdwc:")) != -1) {
+        switch (opt) {
+            case 'p':
+                directory = ".";
+                directory_given = 1;
+                printf("Printing all files in the directory:\n");
+                print_files(directory);
+                break;
+            case 'h':
+                directory = ".";
+                directory_given = 1;
+                printf("Printing all hidden files in the directory:\n");
+                print_hidden(directory);
+                break;
+            case 's':
+                directory = ".";
+                directory_given = 1;
+                printf("Showing size and last modified time of files in the directory:\n");
+                print_size_time(directory);
+                break;
+            case 'd':
+                printf("Showing all directories present in the computer:\n");
+                print_all_directories();
+                break;
+            case 'w':
+                directory = ".";
+                directory_given = 1;
+                printf("Simulating the behavior of the ls command:\n");
+                ls_command(directory);
+                break;
+            case 'c':
+                directory = optarg;
+                directory_given = 1;
+                printf("Changing directory:\n");
+                change_directory(directory);
+                break;
+            default:
+                printf("Invalid option\n");
+                break;
+        }
+    }
+
+    if (!directory_given) {
+        // If no directory is given, default to the current directory
+        printf("No directory provided. Defaulting to the current directory.\n");
+        printf("Current directory:\n");
+        print_files(".");
+    }
+
+    return 0;
+}
