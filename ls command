@@ -59,22 +59,6 @@ void print_size_time(const char *directory) {
     closedir(dir);
 }
 
-void print_all_directories() {
-    DIR *dir = opendir(".");
-    if (dir == NULL) {
-        perror("opendir");
-        return;
-    }
-
-    struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL) {
-        if (entry->d_type == DT_DIR) {
-            printf("%s\n", entry->d_name);
-        }
-    }
-
-    closedir(dir);
-}
 
 void ls_command(const char *directory) {
     if (directory == NULL) {
@@ -86,26 +70,22 @@ void ls_command(const char *directory) {
     }
 }
 
-void change_directory(const char *directory) {
-    if (chdir(directory) != 0) {
-        perror("chdir");
-    }
-}
+
 
 int main(int argc, char *argv[]) {
     int opt;
     char *directory = NULL;
     int directory_given = 0;
 
-    while ((opt = getopt(argc, argv, "phsdwc:")) != -1) {
+    while ((opt = getopt(argc, argv, "lasw")) != -1) {
         switch (opt) {
-            case 'p':
+            case 'l':
                 directory = ".";
                 directory_given = 1;
                 printf("Printing all files in the directory:\n");
                 print_files(directory);
                 break;
-            case 'h':
+            case 'a':
                 directory = ".";
                 directory_given = 1;
                 printf("Printing all hidden files in the directory:\n");
@@ -117,22 +97,13 @@ int main(int argc, char *argv[]) {
                 printf("Showing size and last modified time of files in the directory:\n");
                 print_size_time(directory);
                 break;
-            case 'd':
-                printf("Showing all directories present in the computer:\n");
-                print_all_directories();
-                break;
             case 'w':
                 directory = ".";
                 directory_given = 1;
                 printf("Simulating the behavior of the ls command:\n");
                 ls_command(directory);
                 break;
-            case 'c':
-                directory = optarg;
-                directory_given = 1;
-                printf("Changing directory:\n");
-                change_directory(directory);
-                break;
+            
             default:
                 printf("Invalid option\n");
                 break;
