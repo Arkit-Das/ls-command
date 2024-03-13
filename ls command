@@ -59,7 +59,6 @@ void print_size_time(const char *directory) {
     closedir(dir);
 }
 
-
 void ls_command(const char *directory) {
     if (directory == NULL) {
         system("ls");
@@ -70,17 +69,15 @@ void ls_command(const char *directory) {
     }
 }
 
-
-
 int main(int argc, char *argv[]) {
     int opt;
     char *directory = NULL;
     int directory_given = 0;
 
-    while ((opt = getopt(argc, argv, "lasw")) != -1) {
+    while ((opt = getopt(argc, argv, "l:asw")) != -1) {
         switch (opt) {
             case 'l':
-                directory = ".";
+                directory = optarg;
                 directory_given = 1;
                 printf("Printing all files in the directory:\n");
                 print_files(directory);
